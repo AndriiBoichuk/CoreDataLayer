@@ -81,7 +81,11 @@ public extension FetchRequest {
     func sorted(by sortDescriptor: SortDescriptor<Entity>) -> FetchRequest<Entity> {
         let clone = self
         
-        clone.sortDescriptiors?.append(sortDescriptor)
+        if let existingSortDescriptors = clone.sortDescriptiors {
+            clone.sortDescriptiors = existingSortDescriptors + [sortDescriptor]
+        } else {
+            clone.sortDescriptiors = [sortDescriptor]
+        }
         
         return clone
     }
