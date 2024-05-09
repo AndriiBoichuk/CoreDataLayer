@@ -8,23 +8,13 @@ import CoreData
 
 public final class DBService {
     private let container: NSPersistentContainer
-    private let model: NSManagedObjectModel
-    private let bundle: Bundle
     
-    public init(modelName: String, bundle: Bundle = .main, inMemory: Bool = false) {
-        self.bundle = bundle
-        
-        guard let modelURL = self.bundle.url(forResource: modelName, withExtension: "momd"),
-            let objectModel = NSManagedObjectModel(contentsOf: modelURL) else {
-                fatalError("Can't find managedObjectModel named \(modelName) in \(self.bundle)")
-        }
-        self.model = objectModel
-        self.container = NSPersistentContainer(name: modelName, managedObjectModel: objectModel)
+    public init(modelName: String, inMemory: Bool = false) {
+        self.container = NSPersistentContainer(name: modelName)
         
         if inMemory {
             container.persistentStoreDescriptions.first!.url = URL(fileURLWithPath: "/dev/null")
         }
-        
         
         container.loadPersistentStores { storeDescription, error in
             if let error = error as? NSError {
@@ -32,6 +22,7 @@ public final class DBService {
             }
         }
         
+        container.viewContext.mergePolicy = NSMergeByPropertyStoreTrumpMergePolicy
         container.viewContext.automaticallyMergesChangesFromParent = true
     }
     
