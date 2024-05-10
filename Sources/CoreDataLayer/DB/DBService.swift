@@ -57,7 +57,7 @@ private extension DBService {
 
 private extension DBService {
     func performWriteTask(_ closure: @escaping (NSManagedObjectContext, (() throws -> ())) throws -> ()) async throws {
-        let context = writeContext
+        let context = viewContext
         try await context.perform {
             try closure(context) {
                 try context.save()
@@ -146,7 +146,7 @@ public extension DBService {
 
 public extension DBService {
     func observable<T: ManagedObject>(_ request: FetchRequest<T>) throws -> RequestObservable<T> {
-        try CoreDataObservable(fetchRequest: request, context: writeContext)
+        try CoreDataObservable(fetchRequest: request, context: viewContext)
     }
 }
 
