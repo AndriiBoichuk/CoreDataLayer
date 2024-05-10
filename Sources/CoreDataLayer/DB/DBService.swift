@@ -22,8 +22,8 @@ public final class DBService {
             }
         }
         
-        container.viewContext.mergePolicy = NSMergeByPropertyStoreTrumpMergePolicy
         container.viewContext.automaticallyMergesChangesFromParent = true
+        container.viewContext.mergePolicy = NSMergeByPropertyStoreTrumpMergePolicy
     }
     
     // MARK: - CoreData Stack
@@ -33,11 +33,19 @@ public final class DBService {
     }()
     
     fileprivate lazy var readContext: NSManagedObjectContext = {
-        container.newBackgroundContext()
+        let context = container.newBackgroundContext()
+        context.parent = viewContext
+        context.mergePolicy = NSMergeByPropertyStoreTrumpMergePolicy
+        
+        return context
     }()
     
     fileprivate lazy var writeContext: NSManagedObjectContext = {
-        container.newBackgroundContext()
+        let context = container.newBackgroundContext()
+        context.parent = viewContext
+        context.mergePolicy = NSMergeByPropertyObjectTrumpMergePolicy
+        
+        return context
     }()
 }
 
@@ -57,7 +65,7 @@ private extension DBService {
 
 private extension DBService {
     func performWriteTask(_ closure: @escaping (NSManagedObjectContext, (() throws -> ())) throws -> ()) async throws {
-        let context = viewContext
+        let context = writeContext
         try await context.perform {
             try closure(context) {
                 try context.save()
