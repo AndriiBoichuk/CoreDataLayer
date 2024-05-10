@@ -8,7 +8,7 @@
 import Foundation
 import CoreData
 
-class CoreDataObservable<Entity: ManagedObject>: RequestObservable<Entity> {
+class CoreDataObservable<Entity: ManagedObject>: NSObject, NSFetchedResultsControllerDelegate {
     var observer: ((ObservableChange<Entity>) -> Void)?
     
     let fetchRequest: NSFetchRequest<Entity>
@@ -25,12 +25,13 @@ class CoreDataObservable<Entity: ManagedObject>: RequestObservable<Entity> {
             managedObjectContext: context,
             sectionNameKeyPath: nil,
             cacheName: nil)
-        fetchedResultsController.delegate = fetchedResultsControllerDelegate
+        super.init()
+        fetchedResultsController.delegate = self
         
-        super.init(request: fetchRequest)
+//        super.init(request: fetchRequest)
     }
     
-    override func observe(_ closure: @escaping (ObservableChange<Entity>) -> Void) {
+    func observe(_ closure: @escaping (ObservableChange<Entity>) -> Void) {
         assert(observer == nil, "Observable can be observed only once")
         
         do {
@@ -55,5 +56,9 @@ class CoreDataObservable<Entity: ManagedObject>: RequestObservable<Entity> {
         } catch {
             closure(.error(error))
         }
+    }
+    
+    func controllerDidChangeContent(_ controller: NSFetchedResultsController<NSFetchRequestResult>) {
+        print("--- didChange")
     }
 }
