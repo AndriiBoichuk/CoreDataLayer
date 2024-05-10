@@ -153,7 +153,7 @@ public extension DBService {
 // MARK: Observable
 
 public extension DBService {
-    func observable<T: ManagedObject>(_ request: FetchRequest<T>) throws -> RequestObservable<T> {
+    func observable<T: ManagedObject>(_ request: FetchRequest<T>) throws -> CoreDataObservable<T> {
         try CoreDataObservable(fetchRequest: request, context: viewContext)
     }
 }
