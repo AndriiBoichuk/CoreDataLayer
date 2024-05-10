@@ -18,14 +18,14 @@ class CoreDataObservable<Entity: ManagedObject>: RequestObservable<Entity> {
     
     init(fetchRequest: FetchRequest<Entity>, context: ManagedObjectContext) throws {
         self.fetchRequest = try fetchRequest.toRaw()
-        self.fetchedResultsControllerDelegate = FetchedResultsControllerDelegate()
+        fetchedResultsControllerDelegate = FetchedResultsControllerDelegate()
         
-        self.fetchedResultsController = NSFetchedResultsController(
+        fetchedResultsController = NSFetchedResultsController(
             fetchRequest: self.fetchRequest,
             managedObjectContext: context,
             sectionNameKeyPath: nil,
             cacheName: nil)
-        self.fetchedResultsController.delegate = self.fetchedResultsControllerDelegate
+        fetchedResultsController.delegate = fetchedResultsControllerDelegate
         
         super.init(request: fetchRequest)
     }
