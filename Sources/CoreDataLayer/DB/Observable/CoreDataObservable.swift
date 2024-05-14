@@ -8,7 +8,7 @@
 import Foundation
 import CoreData
 
-public class CoreDataObservable<Entity: ManagedObject>: NSObject, NSFetchedResultsControllerDelegate {
+class CoreDataObservable<Entity: ManagedObject>: RequestObservable<Entity> {
     var observer: ((ObservableChange<Entity>) -> Void)?
     
     let fetchRequest: NSFetchRequest<Entity>
@@ -25,13 +25,13 @@ public class CoreDataObservable<Entity: ManagedObject>: NSObject, NSFetchedResul
             managedObjectContext: context,
             sectionNameKeyPath: nil,
             cacheName: nil)
-        super.init()
-        fetchedResultsController.delegate = self
         
-//        super.init(request: fetchRequest)
+        fetchedResultsController.delegate = fetchedResultsControllerDelegate
+        
+        super.init(request: fetchRequest)
     }
     
-    public func observe(_ closure: @escaping (ObservableChange<Entity>) -> Void) {
+    override func observe(_ closure: @escaping (ObservableChange<Entity>) -> Void) {
         assert(observer == nil, "Observable can be observed only once")
         
         do {
@@ -40,25 +40,15 @@ public class CoreDataObservable<Entity: ManagedObject>: NSObject, NSFetchedResul
             observer = closure
             
             fetchedResultsControllerDelegate.observer = { [weak self] (change: ObservableChange<Entity>) in
-                guard let self, case .change(let change) = change else {
+                guard let self, case .change(let objects) = change else {
                     return
                 }
-                let changes: ObservableChange<Entity>.ModelChange = (
-                    objects: change.objects,
-                    deletions: change.deletions,
-                    insertions: change.insertions,
-                    modifications: change.modifications
-                )
-                self.observer?(.change(changes))
+                self.observer?(.change(objects))
             }
             
             try fetchedResultsController.performFetch()
         } catch {
             closure(.error(error))
         }
-    }
-    
-    public func controllerDidChangeContent(_ controller: NSFetchedResultsController<NSFetchRequestResult>) {
-        print("--- didChange")
     }
 }

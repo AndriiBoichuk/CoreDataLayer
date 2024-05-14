@@ -17,7 +17,7 @@ public enum ObservableChange<T: ManagedObject> {
     )
     
     case initial([T])
-    case change(ModelChange)
+    case change([T])
     case error(Error)
 }
 
