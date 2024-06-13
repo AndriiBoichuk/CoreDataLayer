@@ -50,19 +50,11 @@ public final class DBService {
     }()
     
     fileprivate lazy var readContext: NSManagedObjectContext = {
-        let context = NSManagedObjectContext(concurrencyType: .privateQueueConcurrencyType)
-        context.parent = viewContext
-        context.mergePolicy = NSMergeByPropertyStoreTrumpMergePolicy
-        
-        return context
+        container.newBackgroundContext()
     }()
     
     fileprivate lazy var writeContext: NSManagedObjectContext = {
-        let context = NSManagedObjectContext(concurrencyType: .privateQueueConcurrencyType)
-        context.parent = viewContext
-        context.mergePolicy = NSMergeByPropertyObjectTrumpMergePolicy
-        
-        return context
+        container.newBackgroundContext()
     }()
 }
 
