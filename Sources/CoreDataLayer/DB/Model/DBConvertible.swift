@@ -1,5 +1,5 @@
 //
-//  DBMapable.swift
+//  DBConvertible.swift
 //
 //  Created by Andrii Boichuk on 21.03.2024.
 //

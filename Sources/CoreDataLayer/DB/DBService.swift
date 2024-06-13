@@ -28,7 +28,7 @@ public final class DBService {
     
     // MARK: - CoreData Stack
     
-    fileprivate lazy var viewContext: NSManagedObjectContext = {
+    public lazy var viewContext: NSManagedObjectContext = {
         container.viewContext
     }()
     
@@ -76,7 +76,8 @@ private extension DBService {
 
 // MARK: - Public Methods
 
-// MARK: Get Methods
+// MARK: Get
+
 public extension DBService {
     func execute(fetchRequest: FetchRequest<some ManagedObject>) async throws -> [some ManagedObject] {
         try await performReadTask { context in
@@ -139,12 +140,23 @@ public extension DBService {
     }
 }
 
-// MARK: Insert Methods
+// MARK: Insert
 
 public extension DBService {
-    func insert<T: ToDBConvetible>(model: T) async throws {
+    func insert(model: some ToDBConvetible) async throws {
         try await performWriteTask { context, saveAction in
             model.object(in: context)
+            try saveAction()
+        }
+    }
+}
+
+// MARK: - Delete
+
+public extension DBService {
+    func delete(model: some ToDBConvetible)  async throws {
+        try await performWriteTask { context, saveAction in
+            context.delete(model.object(in: context))
             try saveAction()
         }
     }
