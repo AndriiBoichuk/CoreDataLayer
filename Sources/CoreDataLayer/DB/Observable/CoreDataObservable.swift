@@ -31,10 +31,6 @@ class CoreDataObservable<Entity: ManagedObject>: RequestObservable<Entity> {
         super.init(request: fetchRequest)
     }
     
-    deinit {
-        print("--- deinit")
-    }
-    
     override func observe(_ closure: @escaping (ObservableChange<Entity>) -> Void) {
         assert(observer == nil, "Observable can be observed only once")
         
