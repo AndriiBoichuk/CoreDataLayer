@@ -180,7 +180,7 @@ public extension DBService {
 
 public extension DBService {
     func observable<T: ManagedObject>(_ request: FetchRequest<T>) throws -> RequestObservable<T> {
-        try CoreDataObservable(fetchRequest: request, context: viewContext)
+        try CoreDataObservable(fetchRequest: request, context: readContext)
     }
 }
 
