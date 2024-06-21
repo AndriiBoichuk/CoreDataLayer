@@ -46,15 +46,19 @@ public final class DBService {
     // MARK: - CoreData Stack
     
     public lazy var viewContext: NSManagedObjectContext = {
-        container.viewContext
+        let context = container.viewContext
+        context.mergePolicy = NSMergeByPropertyObjectTrumpMergePolicy
+        return context
     }()
     
     fileprivate lazy var readContext: NSManagedObjectContext = {
-        container.newBackgroundContext()
+        viewContext
     }()
     
     fileprivate lazy var writeContext: NSManagedObjectContext = {
-        container.newBackgroundContext()
+        let context = container.newBackgroundContext()
+        context.mergePolicy = NSMergeByPropertyObjectTrumpMergePolicy
+        return context
     }()
 }
 
@@ -75,6 +79,7 @@ private extension DBService {
 private extension DBService {
     func performWriteTask(_ closure: @escaping (NSManagedObjectContext, (() throws -> ())) throws -> ()) async throws {
         let context = writeContext
+        observeChanges(in: context)
         try await context.perform {
             try closure(context) {
                 try context.save()
@@ -188,6 +193,20 @@ private extension DBService {
     
     func map<Entity: ManagedObject, T: FromDBConvetible>(object: Entity, to Type: T.Type) -> T? {
         .init(with: object)
+    }
+    
+    func observeChanges(in context: NSManagedObjectContext) {
+        NotificationCenter
+            .default
+            .addObserver(
+                forName: .NSManagedObjectContextDidSave,
+                object: context,
+                queue: nil
+            ) { [weak self] notification in
+                self?.readContext.perform {
+                    self?.readContext.mergeChanges(fromContextDidSave: notification)
+                }
+            }
     }
 }
 
