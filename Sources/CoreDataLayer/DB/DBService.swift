@@ -8,6 +8,7 @@ import CoreData
 
 public final class DBService {
     private let container: NSPersistentContainer
+    private var isBusy: Bool = false
     
     public init(modelName: String, inMemory: Bool = false) {
         self.container = NSPersistentContainer(name: modelName)
@@ -65,7 +66,13 @@ public final class DBService {
 // MARK: - Read
 
 private extension DBService {
-    func performReadTask<T>(closure: @escaping (NSManagedObjectContext) throws -> (T)) async throws -> T{
+    func performReadTask<T>(closure: @escaping (NSManagedObjectContext) throws -> (T)) async throws -> T {
+        while isBusy {
+            await Task.yield()
+        }
+        isBusy = true
+        defer { isBusy = false }
+        
         let context = readContext
         return try await context.perform {
             try closure(context)
@@ -78,11 +85,21 @@ private extension DBService {
 
 private extension DBService {
     func performWriteTask(_ closure: @escaping (NSManagedObjectContext, (() throws -> ())) throws -> ()) async throws {
+        while isBusy {
+            await Task.yield()
+        }
+        isBusy = true
+        defer { isBusy = false }
+        
         let context = writeContext
         observeChanges(in: context)
         try await context.perform {
             try closure(context) {
-                try context.save()
+                do {
+                    try context.save()
+                } catch {
+                    context.rollback()
+                }
             }
         }
     }
