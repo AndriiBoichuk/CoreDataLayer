@@ -8,23 +8,12 @@ import CoreData
 
 public final class DBService {
     private let container: NSPersistentContainer
-    private var isBusy: Bool = false
+    private let queue: DispatchQueue
+    private var _isBusy: Bool = false
     
-    public init(modelName: String, inMemory: Bool = false) {
-        self.container = NSPersistentContainer(name: modelName)
-        
-        if inMemory {
-            container.persistentStoreDescriptions.first!.url = URL(fileURLWithPath: "/dev/null")
-        }
-        
-        container.loadPersistentStores { storeDescription, error in
-            if let error = error as? NSError {
-                fatalError("Unresolved error \(error), \(error.userInfo)")
-            }
-        }
-        
-        container.viewContext.automaticallyMergesChangesFromParent = true
-        container.viewContext.mergePolicy = NSMergeByPropertyStoreTrumpMergePolicy
+    private var isBusy: Bool {
+        get { queue.sync { _isBusy } }
+        set { queue.async(flags: .barrier) { self._isBusy = newValue } }
     }
     
     public init(container: NSPersistentContainer, inMemory: Bool = false) {
@@ -42,6 +31,14 @@ public final class DBService {
         
         container.viewContext.automaticallyMergesChangesFromParent = true
         container.viewContext.mergePolicy = NSMergeByPropertyStoreTrumpMergePolicy
+        
+        queue = .init(label: "DBService", attributes: .concurrent)
+    }
+    
+    convenience public init(modelName: String, inMemory: Bool = false) {
+        let container = NSPersistentContainer(name: modelName)
+        
+        self.init(container: container, inMemory: inMemory)
     }
     
     // MARK: - CoreData Stack
